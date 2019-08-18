@@ -1,0 +1,31 @@
+﻿#based on https://blog.devcenter.co/deploy-asp-net-core-2-0-apps-on-heroku-eea8efd918b6
+#also based on https://codeburst.io/accessing-heroku-config-variables-in-your-vue-webpack-app-145afb32dd67
+
+FROM mcr.microsoft.com/dotnet/core/aspnet:2.2-stretch-slim AS base
+WORKDIR /app
+
+FROM mcr.microsoft.com/dotnet/core/sdk:2.2-stretch AS build
+WORKDIR /src
+COPY ["ContainerWebApp.csproj", ""]
+RUN dotnet restore "ContainerWebApp.csproj"
+COPY . .
+WORKDIR "/src/"
+RUN dotnet build "ContainerWebApp.csproj" -c Release -o /app
+
+FROM build AS publish
+RUN dotnet publish "ContainerWebApp.csproj" -c Release -o /app
+
+FROM base AS final
+WORKDIR /app
+COPY --from=publish /app .
+#ENTRYPOINT ["dotnet", "ContainerWebApp.dll"]
+
+
+CMD export ASPNETCORE_URLS=http://*:$PORT
+#CMD ASPNETCORE_URLS=http://*:$PORT dotnet FuraFila.WebApp.dll
+RUN echo 'be ready! we are running some # of cool things'
+
+RUN echo ASPNETCORE_URLS
+RUN printenv
+#ENTRYPOINT ["dotnet", "ContainerWebApp.dll"]
+CMD ASPNETCORE_URLS=http://*:$PORT dotnet ContainerWebApp.dll
